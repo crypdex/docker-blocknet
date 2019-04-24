@@ -1,0 +1,88 @@
+# FROM ubuntu:bionic
+FROM arm64v8/ubuntu:bionic
+
+# ENV HOST=x86_64-pc-linux-gnu
+ENV HOST=aarch64-linux-gnu
+
+ENV BLOCKNET_VERSION=3.13.0
+
+ARG cores=8
+ENV ecores=$cores
+ENV PROJECTDIR=/opt/blocknet
+ENV BASEPREFIX=$PROJECTDIR/depends
+ENV DISTDIR=/opt/blocknet/dist
+
+RUN useradd -r blocknet
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  software-properties-common \
+  build-essential \
+  ca-certificates \
+  wget curl git \
+  && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN add-apt-repository universe && apt-get update && apt-get install -y \
+  libboost-dev \
+  autoconf \
+  libevent-dev \
+  libtool \
+  pkg-config \
+  g++-8 \
+  gcc-8
+
+RUN add-apt-repository ppa:bitcoin/bitcoin && apt-get update && apt-get install -y \
+  libdb4.8-dev libdb4.8++-dev libboost-all-dev bsdmainutils libssl1.0-dev libzmq3-dev libgmp-dev
+# RUN add-apt-repository ppa:bitcoin/bitcoin \
+#   && apt update \
+#   && apt install -y --no-install-recommends \
+#   build-essential libtool autotools-dev bsdmainutils \
+#   libevent-dev autoconf automake pkg-config libssl-dev \
+#   libdb4.8-dev libdb4.8++-dev \
+#   && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# gcc8
+# RUN apt update \
+#   && apt install -y --no-install-recommends \
+#   g++-8-multilib gcc-8-multilib binutils-gold \
+#   && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Install dependencies
+# RUN apt-get install libboost-all-dev libzmq3-dev libssl-dev
+
+# Download depends
+RUN mkdir -p $PROJECTDIR
+#   && cd $PROJECTDIR \
+#   && wget -nv https://s3.us-east-2.amazonaws.com/devbuilds.blocknetprotocol.com/depends/depends-3.11.1-dev-bionic.tar.gz \
+#   && [ "$(printf '9d9c444fcef2a1776bb276639a5bc634829d498ef0ee31f5035a7c735d0c8b03 depends-3.11.1-dev-bionic.tar.gz' | sha256sum -c)" = "depends-3.11.1-dev-bionic.tar.gz: OK" ] || $(echo "depends checksum failed"; exit 1)
+
+# Copy source files
+RUN cd /opt/blocknet \
+  && git clone --depth 1 --branch ${BLOCKNET_VERSION} https://github.com/BlocknetDX/blocknet .
+
+# Build source
+RUN mkdir -p $DISTDIR \
+  && cd $PROJECTDIR \
+  && chmod +x ./autogen.sh; sync \
+  && ./autogen.sh \
+  && CONFIG_SITE=$BASEPREFIX/$HOST/share/config.site ./configure CC=gcc-8 CXX=g++-8 --without-gui --enable-debug --prefix=/ \
+  && make clean \
+  && echo "Building with cores: $ecores" \
+  # && make CC=gcc-8 CXX=g++-8 -j$ecores \
+  && make CC=gcc-8 CXX=g++-8 -j$ecores \
+  && make install DESTDIR=/usr/local/bin \
+  && make clean
+
+# WORKDIR /opt/blocknet/dist
+
+COPY entrypoint.sh /entrypoint.sh
+
+VOLUME ["/home/blocknet/.blocknet"]
+
+# Port, RPC, Test Port, Test RPC
+EXPOSE 41412 41414 41474 41419
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+CMD ["blocknetdxd"]
+
+

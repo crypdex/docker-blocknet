@@ -1,0 +1,29 @@
+FROM debian:stretch
+
+ENV BLOCKNET_VERSION=3.13.0
+
+LABEL maintainer.0="David Michael"
+
+RUN useradd -r blocknet \
+  && apt-get update -y \
+  && apt-get install -y curl git build-essential \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN git clone https://github.com/ncopa/su-exec.git \
+  && cd su-exec && make && cp su-exec /usr/local/bin/ \
+  && cd .. && rm -rf su-exec
+
+RUN curl -SLO https://github.com/BlocknetDX/blocknet/releases/download/v${BLOCKNET_VERSION}/blocknetdx-${BLOCKNET_VERSION}-x86_64-linux-gnu.tar.gz \
+  && tar --strip=2 -xzf *.tar.gz -C /usr/local/bin \
+  && rm *.tar.gz
+
+COPY entrypoint.sh /entrypoint.sh
+
+VOLUME ["/home/blocknet/.blocknet"]
+
+EXPOSE 41412 41414
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+CMD ["blocknetdxd"]
