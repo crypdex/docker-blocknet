@@ -4,7 +4,7 @@ ENV BLOCKNET_VERSION=3.13.0
 
 LABEL maintainer.0="David Michael"
 
-RUN useradd -r blocknet \
+RUN useradd -r blocknetdx \
   && apt-get update -y \
   && apt-get install -y curl git build-essential \
   && apt-get clean \
@@ -20,7 +20,7 @@ RUN curl -SLO https://github.com/BlocknetDX/blocknet/releases/download/v${BLOCKN
 
 COPY entrypoint.sh /entrypoint.sh
 
-VOLUME ["/home/blocknet/.blocknet"]
+VOLUME ["/home/blocknetdx/.blocknetdx"]
 
 EXPOSE 41412 41414
 

@@ -8,11 +8,11 @@ ENV BLOCKNET_VERSION=3.13.0
 
 ARG cores=8
 ENV ecores=$cores
-ENV PROJECTDIR=/opt/blocknet
+ENV PROJECTDIR=/opt/blocknetdx
 ENV BASEPREFIX=$PROJECTDIR/depends
-ENV DISTDIR=/opt/blocknet/dist
+ENV DISTDIR=/opt/blocknetdx/dist
 
-RUN useradd -r blocknet
+RUN useradd -r blocknetdx
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   software-properties-common \
@@ -56,7 +56,7 @@ RUN mkdir -p $PROJECTDIR
 #   && [ "$(printf '9d9c444fcef2a1776bb276639a5bc634829d498ef0ee31f5035a7c735d0c8b03 depends-3.11.1-dev-bionic.tar.gz' | sha256sum -c)" = "depends-3.11.1-dev-bionic.tar.gz: OK" ] || $(echo "depends checksum failed"; exit 1)
 
 # Copy source files
-RUN cd /opt/blocknet \
+RUN cd /opt/blocknetdx \
   && git clone --depth 1 --branch ${BLOCKNET_VERSION} https://github.com/BlocknetDX/blocknet .
 
 # Build source
@@ -74,9 +74,13 @@ RUN mkdir -p $DISTDIR \
 
 # WORKDIR /opt/blocknet/dist
 
+RUN git clone https://github.com/ncopa/su-exec.git \
+  && cd su-exec && make && cp su-exec /usr/local/bin/ \
+  && cd .. && rm -rf su-exec
+
 COPY entrypoint.sh /entrypoint.sh
 
-VOLUME ["/home/blocknet/.blocknet"]
+VOLUME ["/home/blocknetdx/.blocknetdx"]
 
 # Port, RPC, Test Port, Test RPC
 EXPOSE 41412 41414 41474 41419

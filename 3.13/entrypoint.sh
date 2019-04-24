@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-datadir="/home/blocknet/.blocknet"
+datadir="/home/blocknetdx/.blocknetdx"
 
 if [ $(echo "$1" | cut -c1) = "-" ]; then
   echo "$0: assuming arguments for blocknetdxd"
@@ -22,7 +22,7 @@ fi
 
 if [ "$1" = "blocknetdxd" ] || [ "$1" = "blocknetdx-cli" ] || [ "$1" = "blocknetdx-tx" ]; then
   echo "$@"
-  exec su-exec blocknet "$@"
+  exec su-exec blocknetdx "$@"
 fi
 
 echo
