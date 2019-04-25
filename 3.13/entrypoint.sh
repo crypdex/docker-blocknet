@@ -13,7 +13,7 @@ if [ $(echo "$1" | cut -c1) = "-" ] || [ "$1" = "blocknetdxd" ]; then
   echo "Creating data directory ..."
   mkdir -p "$datadir"
   chmod 700 "$datadir"
-  chown -R blocknet "$datadir"
+  chown -R blocknetdx "$datadir"
 
   echo "$0: setting data directory to $datadir"
 
